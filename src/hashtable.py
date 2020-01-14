@@ -32,7 +32,11 @@ class HashTable:
 
         OPTIONAL STRETCH: Research and implement DJB2
         '''
-        pass
+        h = 5381
+        for c in key:
+            c = ord(c)
+            h = ((h << 5) + h) + c
+        return h
 
 
     def _hash_mod(self, key):
@@ -51,7 +55,18 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        if self.storage[self._hash_mod(key)] is None:
+            self.storage[self._hash_mod(key)] = LinkedPair(key, value)
+        elif self._retrieve(key) is not None:
+            self._retrieve(key).value = value
+        else:
+            lp = self.storage[self._hash_mod(key)]
+            while lp.next is not None:
+                lp = lp.next
+            lp.next = LinkedPair(key, value)
+        s = set(self.storage)
+        if ((len(s) - 1) / self.capacity) > 0.7:
+            self.resize()
 
 
 
@@ -63,7 +78,25 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        s = self._hash_mod(key)
+        lp = self.storage[s]
+        if lp.key == key:
+            self.storage[s] = lp.next
+            return
+        elif lp is not None:
+            while lp.key != key:
+                try:
+                    if lp.next.key == key:
+                        lp.next = lp.next.next
+                except:
+                    lp = lp.next
+                else:
+                    return
+        else:
+            return
+        if ((len(s) - 1) / self.capacity) < 0.2:
+            self.capacity = self.capacity / 4
+            self.resize()
 
 
     def retrieve(self, key):
@@ -74,7 +107,15 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        s = self._hash_mod(key)
+        lp = self.storage[s]
+        if lp is not None:
+            while lp.key != key:
+                if lp.next is not None:
+                    lp = lp.next
+                else:
+                    return None
+            return lp
 
 
     def resize(self):
@@ -84,7 +125,18 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        self.capacity *= 2
+        old_storage = self.storage
+        self.storage = [None] * self.capacity
+        for i in old_storage:
+            if i is not None:
+                lp = i
+                while hasattr(lp, "key"):
+                    self.insert(lp.key, lp.value)
+                    if lp.next is not None:
+                        lp = lp.next
+                    else:
+                        break
 
 
 
